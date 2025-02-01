@@ -1,44 +1,37 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager  # Automatically manages ChromeDriver
+from selenium.webdriver.edge.service import Service
+from selenium.webdriver.edge.options import Options
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 import time
 import urllib
-import json
-import unicodedata
-import re
-import html
+from .utils import normalize_text, parse_relative_date
+
 
 # Configure Selenium to use Chrome
 def setup_selenium():
-    chrome_options = Options()
-    #chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-    chrome_options.add_argument("accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-    chrome_options.add_argument("accept-language=en-US,en;q=0.5")
-    chrome_options.headless = False
+    edge_options = Options()
+    #edge_options.add_argument("--headless")  # Uncomment to run in headless mode
+    edge_options.add_argument("--disable-blink-features=AutomationControlled")  # Disable automation detection
+    edge_options.add_argument("--no-sandbox")
+    edge_options.add_argument("--disable-dev-shm-usage")
+    edge_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59")
+    edge_options.headless = False  # Set to True for headless mode
 
-    # Use webdriver_manager to automatically download and manage ChromeDriver
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    # Use webdriver_manager to automatically download and manage Edge WebDriver
+    service = Service(EdgeChromiumDriverManager().install())
+    driver = webdriver.Edge(service=service, options=edge_options)
     return driver
 
 
 # Load job listings from Indeed
-def load_indeed_jobs_div(driver, job_title, location):
+def load_indeed_jobs_div(driver, job_title, location, start=0):
     # Construct the URL
-    getVars = {'q': job_title, 'l': location, 'fromage': 'last', 'sort': 'date'}
+    getVars = {'q': job_title, 'l': location, 'fromage': 'last'}  # Removed 'sort': 'date'
     url = ('https://www.indeed.co.uk/jobs?' + urllib.parse.urlencode(getVars))
 
     # Open the URL
     driver.get(url)
-    time.sleep(6)  # Wait for the page to load
+    time.sleep(12)  # Wait for the page to load
 
     # Return the page source for parsing
     return driver.page_source
@@ -89,16 +82,6 @@ def extract_job_information_indeed(job_soup, desired_characs):
     return jobs_list, num_listings
 
 
-def normalize_text(text):
-    text = unicodedata.normalize("NFKD", text)
-    text = re.sub(u"\u2013", "-", text)  # Replace en dash with hyphen for readability
-    text = re.sub(u"\u2014", "-", text)  # Replace em dash with hyphen for readability
-    text = re.sub(u"\u2010", "-", text)  # Replace hyphen
-    text = re.sub(u"\u00e2\u0080\u0093", "-", text)  # Replace problematic sequence
-    text = html.unescape(text)
-    return text.strip()
-
-
 # Helper functions to extract specific job details
 def extract_job_title_indeed(job_elem):
     title_elem = job_elem.select_one('[id^="jobTitle"]')
@@ -109,10 +92,8 @@ def extract_job_title_indeed(job_elem):
     return "N/A"
 
 
-
-
 def extract_company_indeed(job_elem):
-    company_elem = job_elem.find('span', class_='company')
+    company_elem = job_elem.find('span', class_='css-1h7lukg eu4oa1w0')
     if company_elem:
         return company_elem.text.strip()
     return "N/A"
@@ -126,31 +107,14 @@ def extract_link_indeed(job_elem):
 
 
 def extract_date_indeed(job_elem):
-    date_elem = job_elem.find('span', class_='date')
+    # Look for the date element using data-testid
+    date_elem = job_elem.find('span', attrs={'data-testid': 'myJobsStateDate'})
     if date_elem:
-        return date_elem.text.strip()
-    return "N/A"
+        # Extract the text (e.g., "EmployerActive 11 days ago")
+        date_text = date_elem.text.strip()
+        # Extract just the date part (e.g., "11 days ago")
+        if "Active" in date_text:
+            date_text = date_text.split("Active")[-1].strip()
+        return parse_relative_date(date_text)
+    return "Date not provided"
 
-
-# Main function
-if __name__ == "__main__":
-    # Set up Selenium
-    driver = setup_selenium()
-
-    try:
-        # Load job listings
-        job_soup = load_indeed_jobs_div(driver, "software engineer", "London")
-        if job_soup:
-            # Parse the page source with BeautifulSoup
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(job_soup, "html.parser")
-
-            # Extract job information
-            jobs_list, num_listings = extract_job_information_indeed(soup,
-                                                                     ['titles', 'companies', 'links', 'date_listed'])
-            # Print job list in a readable format
-            print(json.dumps(jobs_list, indent=4))
-            print(f"Number of listings: {num_listings}")
-    finally:
-        # Close the browser
-        driver.quit()
