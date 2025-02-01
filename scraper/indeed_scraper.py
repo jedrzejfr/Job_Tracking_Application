@@ -31,7 +31,7 @@ def load_indeed_jobs_div(driver, job_title, location, start=0):
 
     # Open the URL
     driver.get(url)
-    time.sleep(12)  # Wait for the page to load
+    time.sleep(10)  # Wait for the page to load
 
     # Return the page source for parsing
     return driver.page_source
@@ -72,6 +72,13 @@ def extract_job_information_indeed(job_soup, desired_characs):
             dates.append(extract_date_indeed(job_elem))
         extracted_info.append(dates)
 
+    # Extract job IDs
+    job_ids = []
+    cols.append('job_ids')
+    for job_elem in job_elems:
+        job_ids.append(extract_job_id_indeed(job_elem))
+    extracted_info.append(job_ids)
+
     jobs_list = {}
 
     for j in range(len(cols)):
@@ -83,6 +90,16 @@ def extract_job_information_indeed(job_soup, desired_characs):
 
 
 # Helper functions to extract specific job details
+def extract_job_id_indeed(job_elem):
+    a_elem = job_elem.find('a', {'data-jk': True})
+    if a_elem:
+        job_id = a_elem.get('data-jk')
+        if job_id:
+            return job_id.strip()
+    print("Failed to extract job_id from:", job_elem)  # Debugging print
+    return "N/A"
+
+
 def extract_job_title_indeed(job_elem):
     title_elem = job_elem.select_one('[id^="jobTitle"]')
     if title_elem:
