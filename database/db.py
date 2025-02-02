@@ -18,7 +18,7 @@ def create_connection(db_file):
 
 def create_table(conn):
     """
-    Create the jobs table if it doesn't exist.
+    Create the jobs table if it doesn't already exist.
     """
     sql_create_jobs_table = """
     CREATE TABLE IF NOT EXISTS jobs (
@@ -26,6 +26,7 @@ def create_table(conn):
         job_id TEXT UNIQUE,  -- Unique job ID (jk value for Indeed)
         title TEXT NOT NULL,
         company TEXT NOT NULL,
+        location TEXT NOT NULL,  -- Job location
         link TEXT NOT NULL,
         date_listed TEXT NOT NULL,
         source TEXT NOT NULL  -- Website source (e.g., "indeed")
@@ -39,11 +40,12 @@ def create_table(conn):
         print(f"Error creating table: {e}")
 
 
+
 def insert_job(conn, job, source, insert_count, ignore_count):
     """
     Insert a job listing into the jobs table if it doesn't already exist.
     """
-    job_id = job[4]  # Use the extracted job ID (data-jk)
+    job_id = job[5]  # Use the extracted job ID (data-jk)
     if job_id == "N/A":
         print(f"Failed to extract job_id from job: {job[2]}")  # Debugging print
         return insert_count, ignore_count
@@ -59,11 +61,11 @@ def insert_job(conn, job, source, insert_count, ignore_count):
     else:
         # Insert the job listing
         sql_insert_job = """
-        INSERT INTO jobs (job_id, title, company, link, date_listed, source)
-        VALUES (?, ?, ?, ?, ?, ?);
+        INSERT INTO jobs (job_id, title, company, location, link, date_listed, source)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
         """
         try:
-            cursor.execute(sql_insert_job, (job_id, job[0], job[1], job[2], job[3], source))
+            cursor.execute(sql_insert_job, (job_id, job[0], job[1], job[2], job[3], job[4], source))
             conn.commit()
             # Fetch the assigned id for the inserted job
             assigned_id = cursor.lastrowid
@@ -74,6 +76,7 @@ def insert_job(conn, job, source, insert_count, ignore_count):
             print(f"Error inserting job: {e}")
 
     return insert_count, ignore_count
+
 
 
 

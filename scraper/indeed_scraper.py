@@ -49,7 +49,7 @@ def load_indeed_jobs_div(driver, job_title, location):
 
 # Extract job information from the page
 def extract_job_information_indeed(job_soup, desired_characs):
-    job_elems = job_soup.find_all('div', class_='job_seen_beacon')  # Updated class name
+    job_elems = job_soup.find_all('div', class_='job_seen_beacon')
 
     cols = []
     extracted_info = []
@@ -68,6 +68,13 @@ def extract_job_information_indeed(job_soup, desired_characs):
             companies.append(extract_company_indeed(job_elem))
         extracted_info.append(companies)
 
+    if 'locations' in desired_characs:
+        locations = []
+        cols.append('locations')
+        for job_elem in job_elems:
+            locations.append(extract_location_indeed(job_elem))
+        extracted_info.append(locations)
+
     if 'links' in desired_characs:
         links = []
         cols.append('links')
@@ -82,21 +89,28 @@ def extract_job_information_indeed(job_soup, desired_characs):
             dates.append(extract_date_indeed(job_elem))
         extracted_info.append(dates)
 
-    # Extract job IDs
-    job_ids = []
-    cols.append('job_ids')
-    for job_elem in job_elems:
-        job_ids.append(extract_job_id_indeed(job_elem))
-    extracted_info.append(job_ids)
+    if 'job_ids' in desired_characs:
+        job_ids = []
+        cols.append('job_ids')
+        for job_elem in job_elems:
+            job_ids.append(extract_job_id_indeed(job_elem))
+        extracted_info.append(job_ids)
 
     jobs_list = {}
-
     for j in range(len(cols)):
         jobs_list[cols[j]] = extracted_info[j]
 
     num_listings = len(extracted_info[0])
 
     return jobs_list, num_listings
+
+
+# Helper function to extract location
+def extract_location_indeed(job_elem):
+    location_elem = job_elem.find('div', {'data-testid': 'text-location'})
+    if location_elem:
+        return location_elem.text.strip()
+    return
 
 
 # Helper functions to extract specific job details
@@ -144,3 +158,6 @@ def extract_date_indeed(job_elem):
             date_text = date_text.split("Active")[-1].strip()
         return parse_relative_date(date_text)
     return "Date not provided"
+
+
+
