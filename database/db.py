@@ -23,13 +23,12 @@ def create_table(conn):
     sql_create_jobs_table = """
     CREATE TABLE IF NOT EXISTS jobs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        job_id TEXT,  -- Unique job ID (jk value for Indeed)
+        job_id TEXT UNIQUE,  -- Unique job ID (jk value for Indeed)
         title TEXT NOT NULL,
         company TEXT NOT NULL,
         link TEXT NOT NULL,
         date_listed TEXT NOT NULL,
-        source TEXT NOT NULL,  -- Website source (e.g., "indeed")
-        UNIQUE(job_id, source)  -- Composite unique key
+        source TEXT NOT NULL  -- Website source (e.g., "indeed")
     );
     """
     try:
@@ -47,18 +46,31 @@ def insert_job(conn, job, source):
     job_id = job[4]  # Use the extracted job ID (data-jk)
     if job_id == "N/A":
         print(f"Failed to extract job_id from job: {job[2]}")  # Debugging print
+        return
 
-    sql_insert_job = """
-    INSERT OR IGNORE INTO jobs (job_id, title, company, link, date_listed, source)
-    VALUES (?, ?, ?, ?, ?, ?);
-    """
-    try:
-        cursor = conn.cursor()
-        cursor.execute(sql_insert_job, (job_id, job[0], job[1], job[2], job[3], source))
-        conn.commit()
-        print(f"Job inserted or ignored (if duplicate): {job[0]}")  # Print the job title
-    except Error as e:
-        print(f"Error inserting job: {e}")
+    # Check if the job listing already exists
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM jobs WHERE job_id = ? AND source = ?", (job_id, source))
+    existing_job = cursor.fetchone()
+
+    if existing_job:
+        print(f"Listing ignored (duplicate): {job[0], job_id}")  # Print if the job is a duplicate
+    else:
+        # Insert the job listing
+        sql_insert_job = """
+        INSERT INTO jobs (job_id, title, company, link, date_listed, source)
+        VALUES (?, ?, ?, ?, ?, ?);
+        """
+        try:
+            cursor.execute(sql_insert_job, (job_id, job[0], job[1], job[2], job[3], source))
+            conn.commit()
+            # Fetch the assigned id for the inserted job
+            assigned_id = cursor.lastrowid
+            print(f"Listing inserted: {job[0]}, ID: {assigned_id}")  # Print if the job was inserted
+
+        except Error as e:
+            print(f"Error inserting job: {e}")
+
 
 
 def get_all_jobs(conn):
