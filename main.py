@@ -41,7 +41,7 @@ def scrape_indeed(db_conn):
 
             # Load job listings for the current page
             try:
-                job_soup = load_indeed_jobs_div(driver, "computing", "London", start=start)
+                job_soup = load_indeed_jobs_div(driver, "computing", "London")
                 if job_soup:
                     # Parse the page source with BeautifulSoup
                     soup = BeautifulSoup(job_soup, "html.parser")
