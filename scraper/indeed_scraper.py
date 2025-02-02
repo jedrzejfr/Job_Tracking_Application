@@ -27,9 +27,9 @@ def setup_selenium():
 
 
 # Load job listings from Indeed
-def load_indeed_jobs_div(driver, job_title, location):
+def load_indeed_jobs_div(driver, job_title, location, start):
     # Construct the URL
-    getVars = {'q': job_title, 'l': location, 'fromage': 'last'}  # Removed 'sort': 'date'
+    getVars = {'q': job_title, 'l': location, 'fromage': 'last', 'start': start}
     url = ('https://www.indeed.co.uk/jobs?' + urllib.parse.urlencode(getVars))
 
     # Open the URL

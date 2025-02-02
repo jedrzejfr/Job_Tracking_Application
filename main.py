@@ -36,13 +36,13 @@ def scrape_indeed(db_conn):
         }
 
         # Scrape 3 pages
-        for page in range(3):  # Scrape pages 1, 2, and 3
+        for page in range(3,6):  # Scrape pages 1, 2, and 3
             start = page * 15  # Indeed uses increments of 10 for pagination
             print(f"Scraping Indeed page {page + 1}...")
 
             # Load job listings for the current page
             try:
-                job_soup = load_indeed_jobs_div(driver, "Networking", "England")
+                job_soup = load_indeed_jobs_div(driver, "data engineer", "London", start=start)
                 if job_soup:
                     # Parse the page source with BeautifulSoup
                     soup = BeautifulSoup(job_soup, "html.parser")
