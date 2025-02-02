@@ -19,8 +19,10 @@ def scrape_indeed(db_conn):
     """
     Scrape job listings from Indeed and save them to the database.
     """
-    # Set up Selenium for Indeed
     driver = setup_indeed_selenium()
+
+    insert_count = 0
+    ignore_count = 0
 
     try:
         # Initialize a dictionary to store all job listings
@@ -33,13 +35,13 @@ def scrape_indeed(db_conn):
         }
 
         # Scrape 3 pages
-        for page in range(5):  # Scrape pages 1, 2, and 3
-            start = page * 15  # Indeed uses increments of 10 for pagination
+        for page in range(3):  # Scrape pages 1, 2, and 3
+            start = page * 15  # Indeed uses increments of 15 for pagination
             print(f"Scraping Indeed page {page + 1}...")
 
             # Load job listings for the current page
             try:
-                job_soup = load_indeed_jobs_div(driver, "data engineer", "London", start=start)
+                job_soup = load_indeed_jobs_div(driver, "computing", "London", start=start)
                 if job_soup:
                     # Parse the page source with BeautifulSoup
                     soup = BeautifulSoup(job_soup, "html.parser")
@@ -64,7 +66,7 @@ def scrape_indeed(db_conn):
                 all_jobs['date_listed'][i],
                 all_jobs['job_ids'][i]  # Include job_id
             )
-            insert_job(db_conn, job, source="indeed")  # Pass the source parameter
+            insert_count, ignore_count = insert_job(db_conn, job, "indeed", insert_count, ignore_count)  # Pass the counts
 
         # Print all job listings
         print("\nAll Indeed Job Listings:")
@@ -72,8 +74,13 @@ def scrape_indeed(db_conn):
         print(f"Total Indeed listings: {len(all_jobs['titles'])}")
 
     finally:
+        # Print counts of inserted and ignored listings
+        print(f"\nTotal listings inserted: {insert_count}")
+        print(f"Total listings ignored (duplicates): {ignore_count}")
+
         # Close the browser
         driver.quit()
+
 
 
 
