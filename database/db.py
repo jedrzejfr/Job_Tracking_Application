@@ -39,14 +39,14 @@ def create_table(conn):
         print(f"Error creating table: {e}")
 
 
-def insert_job(conn, job, source):
+def insert_job(conn, job, source, insert_count, ignore_count):
     """
     Insert a job listing into the jobs table if it doesn't already exist.
     """
     job_id = job[4]  # Use the extracted job ID (data-jk)
     if job_id == "N/A":
         print(f"Failed to extract job_id from job: {job[2]}")  # Debugging print
-        return
+        return insert_count, ignore_count
 
     # Check if the job listing already exists
     cursor = conn.cursor()
@@ -55,6 +55,7 @@ def insert_job(conn, job, source):
 
     if existing_job:
         print(f"Listing ignored (duplicate): {job[0], job_id}")  # Print if the job is a duplicate
+        ignore_count += 1
     else:
         # Insert the job listing
         sql_insert_job = """
@@ -67,9 +68,13 @@ def insert_job(conn, job, source):
             # Fetch the assigned id for the inserted job
             assigned_id = cursor.lastrowid
             print(f"Listing inserted: {job[0]}, ID: {assigned_id}")  # Print if the job was inserted
+            insert_count += 1
 
         except Error as e:
             print(f"Error inserting job: {e}")
+
+    return insert_count, ignore_count
+
 
 
 
