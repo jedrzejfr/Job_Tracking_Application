@@ -2,6 +2,9 @@ from selenium import webdriver
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import urllib
 from .utils import normalize_text, parse_relative_date
@@ -31,7 +34,13 @@ def load_indeed_jobs_div(driver, job_title, location, start=0):
 
     # Open the URL
     driver.get(url)
-    time.sleep(10)  # Wait for the page to load
+    # Wait for the job listings to load
+    try:
+        WebDriverWait(driver, 600).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "job_seen_beacon"))  # Adjusted to detect 'job_seen_beacon' class
+        )
+    except:
+        print("Job listings did not load within the expected time.")
 
     # Return the page source for parsing
     return driver.page_source
@@ -134,4 +143,3 @@ def extract_date_indeed(job_elem):
             date_text = date_text.split("Active")[-1].strip()
         return parse_relative_date(date_text)
     return "Date not provided"
-
