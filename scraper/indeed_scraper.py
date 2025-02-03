@@ -7,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 import urllib
 from urllib import parse
-from .utils import normalize_text, parse_relative_date
+from .utils import parse_relative_date
 
 
 # Configure Selenium to use Chrome
@@ -75,6 +75,13 @@ def extract_job_information_indeed(job_soup, desired_characs):
             locations.append(extract_location_indeed(job_elem))
         extracted_info.append(locations)
 
+    if 'salaries' in desired_characs:
+        salaries = []
+        cols.append('salaries')
+        for job_elem in job_elems:
+            salaries.append(extract_salary_indeed(job_elem))
+        extracted_info.append(salaries)
+
     if 'links' in desired_characs:
         links = []
         cols.append('links')
@@ -105,7 +112,13 @@ def extract_job_information_indeed(job_soup, desired_characs):
     return jobs_list, num_listings
 
 
-# Helper function to extract location
+def extract_salary_indeed(job_elem):
+    salary_elem = job_elem.find('div', class_='metadata salary-snippet-container css-1f4kgma eu4oa1w0')
+    if salary_elem:
+        return salary_elem.text.strip()
+    return "No salary range listed"
+
+
 def extract_location_indeed(job_elem):
     location_elem = job_elem.find('div', {'data-testid': 'text-location'})
     if location_elem:
@@ -113,7 +126,6 @@ def extract_location_indeed(job_elem):
     return
 
 
-# Helper functions to extract specific job details
 def extract_job_id_indeed(job_elem):
     a_elem = job_elem.find('a', {'data-jk': True})
     if a_elem:
@@ -127,9 +139,7 @@ def extract_job_id_indeed(job_elem):
 def extract_job_title_indeed(job_elem):
     title_elem = job_elem.select_one('[id^="jobTitle"]')
     if title_elem:
-        title_text = title_elem.text.strip()
-        title_text = normalize_text(title_text)
-        return title_text
+        return title_elem.text.strip()
     return "N/A"
 
 

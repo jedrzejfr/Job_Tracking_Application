@@ -13,7 +13,7 @@ from .indeed_scraper import (
 # )
 
 # Expose reusable utility functions
-from .utils import normalize_text, parse_relative_date
+from .utils import parse_relative_date
 
 # Define what gets imported when using `from scraper import *`
 __all__ = [
@@ -23,6 +23,5 @@ __all__ = [
     # 'setup_other_selenium',
     # 'load_other_jobs_div',
     # 'extract_job_information_other',
-    'normalize_text',
     'parse_relative_date'
 ]

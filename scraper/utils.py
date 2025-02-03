@@ -1,20 +1,4 @@
 from datetime import datetime, timedelta
-import unicodedata
-import re
-import html
-
-
-def normalize_text(text):
-    """
-    Normalize text by removing special characters and encoding issues.
-    """
-    text = unicodedata.normalize("NFKD", text)
-    text = re.sub(u"\u2013", "-", text)  # Replace en dash with hyphen for readability
-    text = re.sub(u"\u2014", "-", text)  # Replace em dash with hyphen for readability
-    text = re.sub(u"\u2010", "-", text)  # Replace hyphen
-    text = re.sub(u"\u00e2\u0080\u0093", "-", text)  # Replace problematic sequence
-    text = html.unescape(text)
-    return text.strip()
 
 
 def parse_relative_date(date_text):
