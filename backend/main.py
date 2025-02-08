@@ -3,7 +3,7 @@
 # Job Tracking Application
 
 import json
-from scraper import (
+from backend.scraper import (
     setup_indeed_selenium,
     load_indeed_jobs_div,
     extract_job_information_indeed,
@@ -11,7 +11,7 @@ from scraper import (
     # load_other_jobs_div,
     # extract_job_information_other
 )
-from database import create_connection, create_table, insert_job
+from backend.database import create_connection, create_table, insert_job
 from bs4 import BeautifulSoup
 
 
