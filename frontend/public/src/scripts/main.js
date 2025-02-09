@@ -1,29 +1,33 @@
+// Sample data (replace with your API fetch logic)
+let allJobs = []; // This will store all jobs fetched from the API
+let currentPage = 1;
+const jobsPerPage = 10;
+
+// Fetch jobs from the API
 async function fetchJobs() {
     try {
-        console.log('Fetching jobs...');  // Debugging
         const response = await fetch('http://localhost:5000/jobs');
-        console.log('Response:', response);  // Debugging
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        const jobs = await response.json();
-        console.log('Jobs:', jobs);  // Debugging
-        displayJobs(jobs);
+        allJobs = await response.json();
+        displayJobs(currentPage);
+        setupPagination();
     } catch (error) {
         console.error('Error fetching jobs:', error);
     }
 }
 
-function displayJobs(jobs) {
-    console.log('Displaying jobs:', jobs);  // Debugging
+// Display jobs for the current page
+function displayJobs(page) {
     const jobListings = document.getElementById('job-listings');
-    if (!jobListings) {
-        console.error('Element with id "job-listings" not found!');
-        return;
-    }
     jobListings.innerHTML = ''; // Clear existing content
 
-    jobs.forEach(job => {
+    const startIndex = (page - 1) * jobsPerPage;
+    const endIndex = startIndex + jobsPerPage;
+    const jobsToDisplay = allJobs.slice(startIndex, endIndex);
+
+    jobsToDisplay.forEach(job => {
         const jobCard = document.createElement('div');
         jobCard.classList.add('job-card');
 
@@ -41,4 +45,63 @@ function displayJobs(jobs) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', fetchJobs);
+// Set up pagination buttons
+function setupPagination() {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = ''; // Clear existing buttons
+
+    const totalPages = Math.ceil(allJobs.length / jobsPerPage);
+
+    // Previous Button
+    const prevButton = document.createElement('button');
+    prevButton.innerText = 'Previous';
+    prevButton.disabled = currentPage === 1;
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayJobs(currentPage);
+            setupPagination();
+        }
+    });
+    pagination.appendChild(prevButton);
+
+    // Next Button
+    const nextButton = document.createElement('button');
+    nextButton.innerText = 'Next';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayJobs(currentPage);
+            setupPagination();
+        }
+    });
+    pagination.appendChild(nextButton);
+}
+
+// Tab Navigation
+function setupTabs() {
+    const tabs = document.querySelectorAll('nav ul li a');
+    const sections = document.querySelectorAll('section');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Remove active class from all tabs and sections
+            tabs.forEach(t => t.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+
+            // Add active class to the clicked tab and corresponding section
+            tab.classList.add('active');
+            const targetSection = document.querySelector(tab.getAttribute('href'));
+            targetSection.classList.add('active');
+        });
+    });
+}
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', () => {
+    fetchJobs();
+    setupTabs();
+});

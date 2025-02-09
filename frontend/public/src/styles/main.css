@@ -1,20 +1,64 @@
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     background-color: #f4f4f4;
 }
 
-h1 {
-    text-align: center;
-    color: #333;
+/* Navigation Bar */
+nav {
+    background-color: #333;
+    padding: 10px;
 }
 
-#job-listings {
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
     display: flex;
-    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+nav ul li a.active,
+nav ul li a:hover {
+    background-color: #575757;
+}
+
+/* Sections */
+section {
+    padding: 20px;
+    display: none;
+}
+
+section.active {
+    display: block;
+}
+
+/* Job Listings */
+.job-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.job-listings {
+    width: 48%;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    justify-content: center;
 }
 
 .job-card {
@@ -22,7 +66,6 @@ h1 {
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 20px;
-    width: 300px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -35,4 +78,30 @@ h1 {
 .job-card p {
     margin: 5px 0;
     color: #666;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination button {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin: 0 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pagination button:hover {
+    background-color: #575757;
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }

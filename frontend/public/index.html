@@ -4,13 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Board</title>
-    <link rel="stylesheet" href="src/styles/main.css">  <!-- Correct path to CSS -->
+    <link rel="stylesheet" href="src/styles/main.css">
 </head>
 <body>
-<h1>Job Listings</h1>
-<div id="job-listings">
-    <!-- Job listings will be dynamically inserted here -->
-</div>
-<script src="src/scripts/main.js"></script>  <!-- Correct path to JS -->
+<!-- Navigation Bar -->
+<nav>
+    <ul>
+        <li><a href="#current-jobs" class="active">Current Jobs</a></li>
+        <li><a href="#test-section-1">Test Section 1</a></li>
+        <li><a href="#test-section-2">Test Section 2</a></li>
+    </ul>
+</nav>
+
+<!-- Current Jobs Section -->
+<section id="current-jobs" class="active">
+    <h1>Current Jobs</h1>
+    <div class="job-container">
+        <div id="job-listings" class="job-listings"></div>
+        <div id="pagination" class="pagination"></div>
+    </div>
+</section>
+
+<!-- Test Section 1 -->
+<section id="test-section-1" class="hidden">
+    <h1>Test Section 1</h1>
+    <p>This is a placeholder for test section 1.</p>
+</section>
+
+<!-- Test Section 2 -->
+<section id="test-section-2" class="hidden">
+    <h1>Test Section 2</h1>
+    <p>This is a placeholder for test section 2.</p>
+</section>
+
+<script src="src/scripts/main.js"></script>
 </body>
 </html>
