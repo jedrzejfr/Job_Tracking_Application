@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-
+import time
+import random
 
 def parse_relative_date(date_text):
     """
@@ -15,3 +16,9 @@ def parse_relative_date(date_text):
         except (ValueError, IndexError):
             pass  # Handle invalid date formats
     return "Date not provided"
+
+def random_delay():
+    """
+    Add a random delay between requests to avoid detection.
+    """
+    time.sleep(random.uniform(1, 3))

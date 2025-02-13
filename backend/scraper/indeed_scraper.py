@@ -1,50 +1,39 @@
-from selenium import webdriver
-from selenium.webdriver.edge.service import Service
-from selenium.webdriver.edge.options import Options
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 import urllib
 from urllib import parse
-from .utils import parse_relative_date
+from .utils import parse_relative_date, random_delay
 
 
 # Configure Selenium to use Chrome
-def setup_selenium():
-    edge_options = Options()
-    edge_options.headless = False  # Set to True for headless mode
-    edge_options.add_argument("--disable-blink-features=AutomationControlled")  # Disable automation detection
-    edge_options.add_argument("--no-sandbox")
-    edge_options.add_argument("--disable-dev-shm-usage")
-    edge_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
-                              "like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59")
-
-    # Use webdriver_manager to automatically download and manage Edge WebDriver
-    service = Service(EdgeChromiumDriverManager().install())
-    driver = webdriver.Edge(service=service, options=edge_options)
-    return driver
-
-
-# Load job listings from Indeed
-def load_indeed_jobs_div(driver, job_title, location, start):
+def load_indeed_jobs_div(sb, job_title, location, start):
+    """
+    Load job listings from Indeed with retry logic.
+    """
     # Construct the URL
     getVars = {'q': job_title, 'l': location, 'fromage': 'last', 'start': start}
     url = ('https://www.indeed.co.uk/jobs?' + urllib.parse.urlencode(getVars))
 
-    # Open the URL
-    driver.get(url)
-    # Wait for the job listings to load
-    try:
-        WebDriverWait(driver, 600).until(
-            # Adjusted to detect 'job_seen_beacon' class
-            ec.presence_of_element_located((By.CLASS_NAME, "job_seen_beacon"))
-        )
-    except:
-        print("Job listings did not load within the expected time.")
+    retry_count = 0
+    while True:
+        print(f"Attempting to load page: {url} (Attempt {retry_count + 1})")
+        sb.open(url)
+        random_delay()  # Add a random delay
+
+        # Wait for the job listings to load (2 seconds max)
+        try:
+            WebDriverWait(sb.driver, 1).until(
+                ec.presence_of_element_located((By.CLASS_NAME, "job_seen_beacon"))
+            )
+            print("Page loaded successfully!")
+            break  # Exit the retry loop if the page loads successfully
+        except:
+            print("Page did not load within 2 seconds. Retrying...")
+            retry_count += 1
 
     # Return the page source for parsing
-    return driver.page_source
+    return sb.get_page_source()
 
 
 # Extract job information from the page
