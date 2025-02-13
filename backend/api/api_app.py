@@ -12,9 +12,9 @@ DATABASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'jobs.
 # Route to fetch jobs from the database
 @app.route('/jobs', methods=['GET'])
 def get_jobs():
-    conn = sqlite3.connect(DATABASE_PATH)  # Use the correct path
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM jobs')  # Query the `jobs` table
+    cursor.execute('SELECT * FROM jobs ORDER BY id DESC')  # Sort by date_listed in descending order
     jobs = cursor.fetchall()
     conn.close()
 
