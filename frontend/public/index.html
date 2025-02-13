@@ -16,13 +16,33 @@
     </ul>
 </nav>
 
+<!-- Search Bar -->
+<div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search job titles...">
+    <button id="search-button">Search</button>
+</div>
+
 <!-- Current Jobs Section -->
 <section id="current-jobs" class="active">
     <h1>Current Jobs</h1>
     <div class="job-container">
+        <!-- Job Listings -->
         <div id="job-listings" class="job-listings"></div>
-        <div id="pagination" class="pagination"></div>
+
+        <!-- Sorting Sidebar -->
+        <div class="sorting-sidebar">
+            <h3>Sort Listings</h3>
+            <label>
+                <input type="checkbox" id="filter-by-date"> Show only listings with a date
+            </label>
+            <label>
+                <input type="checkbox" id="filter-by-salary"> Show only listings with a salary
+            </label>
+        </div>
     </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="pagination"></div>
 </section>
 
 <!-- Test Section 1 -->

@@ -1,5 +1,5 @@
-// Sample data (replace with your API fetch logic)
 let allJobs = []; // This will store all jobs fetched from the API
+let filteredJobs = []; // This will store the filtered jobs
 let currentPage = 1;
 const jobsPerPage = 10;
 
@@ -11,6 +11,7 @@ async function fetchJobs() {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         allJobs = await response.json();
+        filteredJobs = allJobs; // Initialize filteredJobs with all jobs
         displayJobs(currentPage);
         setupPagination();
     } catch (error) {
@@ -25,11 +26,20 @@ function displayJobs(page) {
 
     const startIndex = (page - 1) * jobsPerPage;
     const endIndex = startIndex + jobsPerPage;
-    const jobsToDisplay = allJobs.slice(startIndex, endIndex);
+    const jobsToDisplay = filteredJobs.slice(startIndex, endIndex);
 
     jobsToDisplay.forEach(job => {
         const jobCard = document.createElement('div');
         jobCard.classList.add('job-card');
+
+        // Format the date (if needed)
+        const formattedDate = job.date_listed === "Date not provided"
+            ? "Date not provided"
+            : new Date(job.date_listed).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
 
         jobCard.innerHTML = `
             <h2>${job.title}</h2>
@@ -37,12 +47,15 @@ function displayJobs(page) {
             <p><strong>Location:</strong> ${job.location}</p>
             <p><strong>Salary:</strong> ${job.salary}</p>
             <p><strong>Link:</strong> <a href="${job.link}" target="_blank">Apply Here</a></p>
-            <p><strong>Posted:</strong> ${job.date_listed}</p>
+            <p><strong>Posted:</strong> ${formattedDate}</p>
             <p><strong>Source:</strong> ${job.source}</p>
         `;
 
         jobListings.appendChild(jobCard);
     });
+
+    // Scroll to the top of the job listings
+    document.getElementById('current-jobs').scrollIntoView({ behavior: 'smooth' });
 }
 
 // Set up pagination buttons
@@ -50,7 +63,7 @@ function setupPagination() {
     const pagination = document.getElementById('pagination');
     pagination.innerHTML = ''; // Clear existing buttons
 
-    const totalPages = Math.ceil(allJobs.length / jobsPerPage);
+    const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
 
     // Previous Button
     const prevButton = document.createElement('button');
@@ -99,6 +112,54 @@ function setupTabs() {
         });
     });
 }
+
+// Apply filters based on checkbox selections
+function applyFilters() {
+    const filterByDate = document.getElementById('filter-by-date').checked;
+    const filterBySalary = document.getElementById('filter-by-salary').checked;
+
+    filteredJobs = allJobs.filter(job => {
+        const hasDate = job.date_listed !== "Date not provided";
+        const hasSalary = job.salary !== "No salary range listed";
+
+        if (filterByDate && filterBySalary) {
+            return hasDate && hasSalary; // Show jobs with both date and salary
+        } else if (filterByDate) {
+            return hasDate; // Show jobs with date
+        } else if (filterBySalary) {
+            return hasSalary; // Show jobs with salary
+        } else {
+            return true; // Show all jobs
+        }
+    });
+
+    currentPage = 1; // Reset to the first page
+    displayJobs(currentPage);
+    setupPagination();
+}
+
+// Filter jobs by title based on search input
+function searchJobs() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    filteredJobs = allJobs.filter(job => job.title.toLowerCase().includes(searchTerm));
+    currentPage = 1; // Reset to the first page
+    displayJobs(currentPage);
+    setupPagination();
+}
+
+// Add event listeners for checkboxes
+document.getElementById('filter-by-date').addEventListener('change', applyFilters);
+document.getElementById('filter-by-salary').addEventListener('change', applyFilters);
+
+// Add event listener for search button
+document.getElementById('search-button').addEventListener('click', searchJobs);
+
+// Add event listener for pressing Enter in the search input
+document.getElementById('search-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        searchJobs();
+    }
+});
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
