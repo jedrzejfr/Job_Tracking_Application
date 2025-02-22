@@ -6,12 +6,18 @@ const jobsPerPage = 10;
 // Fetch jobs from the API
 async function fetchJobs() {
     try {
+        console.log("Fetching jobs...");
         const response = await fetch('http://localhost:5000/jobs');
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        allJobs = await response.json();
+
+        const data = await response.json();
+        console.log("Jobs data:", data);  // Log the fetched data
+
+        allJobs = data;
         filteredJobs = allJobs; // Initialize filteredJobs with all jobs
+
         displayJobs(currentPage);
         setupPagination();
     } catch (error) {
@@ -32,14 +38,19 @@ function displayJobs(page) {
         const jobCard = document.createElement('div');
         jobCard.classList.add('job-card');
 
-        // Format the date (if needed)
-        const formattedDate = job.date_listed === "Date not provided"
-            ? "Date not provided"
-            : new Date(job.date_listed).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+        // Parse the date in "DD/MM/YYYY" format
+        let formattedDate = "Date not provided";
+        if (job.date_listed && job.date_listed !== "Date not provided") {
+            const [day, month, year] = job.date_listed.split('/'); // Split the string into day, month, year
+            const dateObj = new Date(`${year}-${month}-${day}`); // Create a valid Date object
+            if (!isNaN(dateObj)) { // Check if the date is valid
+                formattedDate = dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+        }
 
         jobCard.innerHTML = `
             <h2>${job.title}</h2>
