@@ -1,19 +1,21 @@
 import sqlite3
 from sqlite3 import Error
+import sqlitecloud
 
-
-def create_connection(db_file):
+def create_connection():
     """
-    Create a database connection to the SQLite database specified by db_file.
+    Create a connection to the SQLite Cloud database.
     """
-    conn = None
     try:
-        conn = sqlite3.connect(db_file)
-        print(f"Connected to SQLite database: {db_file}")
+        # SQLite Cloud connection string
+        conn = sqlitecloud.connect(
+            "sqlitecloud://czwglqw5hk.g5.sqlite.cloud:8860/jobsdatabase?apikey=vQVqgZyRhqQ6r09X1PiM2bKF0ga6biBIoNbVcfT8SI4"
+        )
+        print("Connected to SQLite Cloud database.")
         return conn
-    except Error as e:
-        print(f"Error connecting to database: {e}")
-    return conn
+    except Exception as e:
+        print(f"Error connecting to SQLite Cloud: {e}")
+        return None
 
 
 def create_table(conn):
@@ -34,10 +36,9 @@ def create_table(conn):
     );
     """
     try:
-        cursor = conn.cursor()
-        cursor.execute(sql_create_jobs_table)
+        conn.execute(sql_create_jobs_table)
         print("Jobs table created or already exists.")
-    except Error as e:
+    except Exception as e:
         print(f"Error creating table: {e}")
 
 
@@ -51,29 +52,25 @@ def insert_job(conn, job, source, insert_count, ignore_count):
         return insert_count, ignore_count
 
     # Check if the job listing already exists
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM jobs WHERE job_id = ? AND source = ?", (job_id, source))
-    existing_job = cursor.fetchone()
+    try:
+        cursor = conn.execute("SELECT id FROM jobs WHERE job_id = ? AND source = ?", (job_id, source))
+        existing_job = cursor.fetchone()
 
-    if existing_job:
-        print(f"Listing ignored (duplicate): {job[0], job_id}")  # Print if the job is a duplicate
-        ignore_count += 1
-    else:
-        # Insert the job listing
-        sql_insert_job = """
-        INSERT INTO jobs (job_id, title, company, location, salary, link, date_listed, source)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-        """
-        try:
-            cursor.execute(sql_insert_job, (job_id, job[0], job[1], job[2], job[3], job[4], job[5], source))
-            conn.commit()
-            # Fetch the assigned id for the inserted job
-            assigned_id = cursor.lastrowid
-            print(f"Listing inserted: {job[0]}, ID: {assigned_id}")  # Print if the job was inserted
+        if existing_job:
+            print(f"Listing ignored (duplicate): {job[0]}, {job_id}")  # Print if the job is a duplicate
+            ignore_count += 1
+        else:
+            # Insert the job listing
+            sql_insert_job = """
+            INSERT INTO jobs (job_id, title, company, location, salary, link, date_listed, source)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+            """
+            conn.execute(sql_insert_job, (job_id, job[0], job[1], job[2], job[3], job[4], job[5], source))
+            print(f"Listing inserted: {job[0]}")  # Print if the job was inserted
             insert_count += 1
 
-        except Error as e:
-            print(f"Error inserting job: {e}")
+    except Exception as e:
+        print(f"Error inserting job: {e}")
 
     return insert_count, ignore_count
 
