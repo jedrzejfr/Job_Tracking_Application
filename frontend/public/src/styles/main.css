@@ -1,8 +1,6 @@
 /* Search Bar */
 .search-bar {
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px; /* Add space below the search bar */
     text-align: center;
 }
 

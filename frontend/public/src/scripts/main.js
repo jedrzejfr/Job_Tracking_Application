@@ -126,23 +126,27 @@ function setupTabs() {
 
 // Apply filters based on checkbox selections
 function applyFilters() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
     const filterByDate = document.getElementById('filter-by-date').checked;
     const filterBySalary = document.getElementById('filter-by-salary').checked;
 
     filteredJobs = allJobs.filter(job => {
         const hasDate = job.date_listed !== "Date not provided";
         const hasSalary = job.salary !== "No salary range listed";
+        const matchesSearch = job.title.toLowerCase().includes(searchTerm);
 
+        // Apply search term and checkbox filters
         if (filterByDate && filterBySalary) {
-            return hasDate && hasSalary; // Show jobs with both date and salary
+            return matchesSearch && hasDate && hasSalary;
         } else if (filterByDate) {
-            return hasDate; // Show jobs with date
+            return matchesSearch && hasDate;
         } else if (filterBySalary) {
-            return hasSalary; // Show jobs with salary
+            return matchesSearch && hasSalary;
         } else {
-            return true; // Show all jobs
+            return matchesSearch;
         }
     });
+
 
     currentPage = 1; // Reset to the first page
     displayJobs(currentPage);
@@ -161,16 +165,9 @@ function searchJobs() {
 // Add event listeners for checkboxes
 document.getElementById('filter-by-date').addEventListener('change', applyFilters);
 document.getElementById('filter-by-salary').addEventListener('change', applyFilters);
-
 // Add event listener for search button
-document.getElementById('search-button').addEventListener('click', searchJobs);
+document.getElementById('search-input').addEventListener('input', applyFilters);
 
-// Add event listener for pressing Enter in the search input
-document.getElementById('search-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        searchJobs();
-    }
-});
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
