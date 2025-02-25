@@ -16,7 +16,7 @@ from seleniumbase import SB
 
 def scrape_indeed(db_conn):
     """
-    Scrape job listings from Indeed and save them to the database using SeleniumBase.
+    Scrape job listings from Indeed and save them to the SQLite Cloud database using SeleniumBase.
     """
     insert_count = 0
     ignore_count = 0
@@ -49,7 +49,7 @@ def scrape_indeed(db_conn):
 
             # Load job listings for the current page
             try:
-                job_soup = load_indeed_jobs_div(sb, "software engineer", "London", start=start)
+                job_soup = load_indeed_jobs_div(sb, "data engineer", "England", start=start)
                 if job_soup:
                     # Parse the page source with BeautifulSoup
                     soup = BeautifulSoup(job_soup, "html.parser")
@@ -97,10 +97,10 @@ def scrape_indeed(db_conn):
 
 def main():
     """
-    Main function to run all scrapers and save data to the database.
+    Main function to run all scrapers and save data to the SQLite Cloud database.
     """
-    # Connect to the SQLite database
-    db_conn = create_connection("database/jobs.db")
+    # Connect to the SQLite Cloud database
+    db_conn = create_connection()
     if db_conn is not None:
         # Create the jobs table (if it doesn't exist)
         create_table(db_conn)
