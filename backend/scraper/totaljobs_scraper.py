@@ -12,8 +12,10 @@ def load_totaljobs_jobs_div(sb, job_title, location, start):
     Load job listings from totaljobs with retry logic.
     """
     # Construct the URL
-    getVars = {'q': job_title, 'l': location, 'fromage': 'last', 'start': start}
-    url = ('https://www.totaljobs.co.uk/jobs?' + urllib.parse.urlencode(getVars))
+    job_title_formatted = job_title.replace(" ", "-").lower()
+    location_formatted = location.replace(" ", "-").lower()
+
+    url = f"https://www.totaljobs.com/jobs/{job_title_formatted}/in-{location_formatted}?page={start + 1}"
 
     retry_count = 0
     while True:
@@ -24,7 +26,7 @@ def load_totaljobs_jobs_div(sb, job_title, location, start):
         # Wait for the job listings to load (2 seconds max)
         try:
             WebDriverWait(sb.driver, 1).until(
-                ec.presence_of_element_located((By.CLASS_NAME, "job_seen_beacon"))
+                ec.presence_of_element_located((By.CSS_SELECTOR, "div[data-genesis-element='CARD_GROUP_CONTAINER']"))
             )
             print("Page loaded successfully!")
             break  # Exit the retry loop if the page loads successfully
@@ -38,7 +40,7 @@ def load_totaljobs_jobs_div(sb, job_title, location, start):
 
 # Extract job information from the page
 def extract_job_information_totaljobs(job_soup, desired_characs):
-    job_elems = job_soup.find_all('div', class_='job_seen_beacon')
+    job_elems = job_soup.select("div[data-genesis-element='CARD_GROUP_CONTAINER'] > div")
 
     cols = []
     extracted_info = []
