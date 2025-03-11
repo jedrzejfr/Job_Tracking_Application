@@ -160,3 +160,52 @@ section {
 section.active {
     display: block;
 }
+
+/* Chart Container */
+.chart-container {
+    width: 90%; /* Increase width */
+    margin: 0 auto;
+    max-width: 1200px; /* Increase max width */
+    height: 600px; /* Increase height */
+}
+
+/* Canvas Element */
+#histogramChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Histogram Controls */
+.histogram-controls {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.histogram-controls label {
+    margin-right: 10px;
+    font-size: 1em;
+    color: #333;
+}
+
+.histogram-controls select,
+.histogram-controls input[type="date"] {
+    padding: 5px;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.histogram-controls button {
+    padding: 5px 10px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.histogram-controls button:hover {
+    background-color: #575757;
+}

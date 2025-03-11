@@ -3,6 +3,50 @@ let filteredJobs = []; // This will store the filtered jobs
 let currentPage = 1;
 const jobsPerPage = 10;
 
+// Initialize a blank histogram
+function initializeBlankHistogram() {
+    const ctx = document.getElementById('histogramChart').getContext('2d');
+
+    // Create a chart with empty data
+    window.histogramChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [], // No labels initially
+            datasets: [{
+                label: 'Number of Listings',
+                data: [], // No data initially
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Allow custom sizing
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Listings'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
 // Fetch jobs from the API
 async function fetchJobs() {
     try {
@@ -20,6 +64,7 @@ async function fetchJobs() {
 
         displayJobs(currentPage);
         setupPagination();
+        renderHistogram(); // Render the histogram with the fetched data
     } catch (error) {
         console.error('Error fetching jobs:', error);
     }
@@ -120,6 +165,11 @@ function setupTabs() {
             tab.classList.add('active');
             const targetSection = document.querySelector(tab.getAttribute('href'));
             targetSection.classList.add('active');
+
+            // Render the histogram if the "Posting Date Analysis" tab is clicked
+            if (tab.getAttribute('href') === '#Posting-Date-Analysis') {
+                renderHistogram();
+            }
         });
     });
 }
@@ -162,15 +212,118 @@ function searchJobs() {
     setupPagination();
 }
 
+// Render the histogram based on user selections
+function renderHistogram() {
+    const granularity = document.getElementById('granularity').value;
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+
+    // Filter jobs by date range
+    const jobsInRange = allJobs.filter(job => {
+        if (job.date_listed === "Date not provided") return false;
+
+        const [day, month, year] = job.date_listed.split('/');
+        const jobDate = new Date(`${year}-${month}-${day}`);
+
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        return (!start || jobDate >= start) && (!end || jobDate <= end);
+    });
+
+    // Group jobs by the selected granularity
+    const groupedData = {};
+    jobsInRange.forEach(job => {
+        const [day, month, year] = job.date_listed.split('/');
+        const jobDate = new Date(`${year}-${month}-${day}`);
+
+        let label;
+        if (granularity === 'day') {
+            label = jobDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        } else if (granularity === 'week') {
+            const weekStart = new Date(jobDate);
+            weekStart.setDate(jobDate.getDate() - jobDate.getDay()); // Start of the week (Sunday)
+            label = `Week of ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        } else if (granularity === 'month') {
+            label = jobDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        }
+
+        if (!groupedData[label]) {
+            groupedData[label] = 0;
+        }
+        groupedData[label]++;
+    });
+
+    // Sort labels chronologically
+    const sortedLabels = Object.keys(groupedData).sort((a, b) => {
+        return new Date(a) - new Date(b);
+    });
+
+    // Prepare data for Chart.js
+    const labels = sortedLabels;
+    const data = sortedLabels.map(label => groupedData[label]);
+
+    // Get the canvas element
+    const ctx = document.getElementById('histogramChart').getContext('2d');
+
+    // Destroy the existing chart if it exists
+    if (window.histogramChart) {
+        window.histogramChart.destroy();
+    }
+
+    // Create the chart
+    window.histogramChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of Listings',
+                data: data,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Allow custom sizing
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Listings'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// Add event listener for the "Update Histogram" button
+document.getElementById('update-histogram').addEventListener('click', renderHistogram);
+
 // Add event listeners for checkboxes
 document.getElementById('filter-by-date').addEventListener('change', applyFilters);
 document.getElementById('filter-by-salary').addEventListener('change', applyFilters);
+
 // Add event listener for search button
 document.getElementById('search-input').addEventListener('input', applyFilters);
 
-
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-    fetchJobs();
-    setupTabs();
+    initializeBlankHistogram(); // Initialize a blank histogram
+    fetchJobs(); // Fetch jobs and render the histogram
+    setupTabs(); // Set up tab navigation
 });

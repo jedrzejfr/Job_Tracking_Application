@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job Board</title>
     <link rel="stylesheet" href="src/styles/main.css">
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <!-- Navigation Bar -->
 <nav>
     <ul>
         <li><a href="#current-jobs" class="active">Current Jobs</a></li>
-        <li><a href="#test-section-1">Test Section 1</a></li>
+        <li><a href="#Posting-Date-Analysis">Posting Date Analysis</a></li>
         <li><a href="#test-section-2">Test Section 2</a></li>
     </ul>
 </nav>
@@ -45,10 +47,32 @@
     <div id="pagination" class="pagination"></div>
 </section>
 
-<!-- Test Section 1 -->
-<section id="test-section-1" class="hidden">
-    <h1>Test Section 1</h1>
-    <p>This is a placeholder for test section 1.</p>
+<!-- Posting Date Analysis Section -->
+<section id="Posting-Date-Analysis" class="hidden">
+    <h1>Job Listings by Date</h1>
+
+    <!-- Controls for histogram granularity and date range -->
+    <div class="histogram-controls">
+        <label for="granularity">Group by:</label>
+        <select id="granularity">
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+        </select>
+
+        <label for="start-date">From:</label>
+        <input type="date" id="start-date">
+
+        <label for="end-date">To:</label>
+        <input type="date" id="end-date">
+
+        <button id="update-histogram">Update Histogram</button>
+    </div>
+
+    <!-- Chart container -->
+    <div class="chart-container">
+        <canvas id="histogramChart"></canvas>
+    </div>
 </section>
 
 <!-- Test Section 2 -->
