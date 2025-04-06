@@ -65,6 +65,7 @@ async function fetchJobs() {
         displayJobs(currentPage);
         setupPagination();
         renderHistogram(); // Render the histogram with the fetched data
+        renderSalaryHistogram(); // For salary distribution histogram
     } catch (error) {
         console.error('Error fetching jobs:', error);
     }
@@ -311,8 +312,124 @@ function renderHistogram() {
     });
 }
 
+// Initialize salary distribution histogram
+function initializeSalaryHistogram() {
+    const ctx = document.getElementById('salaryHistogramChart').getContext('2d');
+
+    window.salaryHistogramChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Number of Jobs',
+                data: [],
+                backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Jobs'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Salary Range'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y} jobs`;
+                        },
+                        title: function(context) {
+                            return context[0].label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Extract numerical salary from string (handles formats like "$50,000 - $70,000")
+function extractSalaryValue(salaryStr) {
+    if (!salaryStr || salaryStr === "No salary range listed") return null;
+
+    // Handle different salary formats
+    const match = salaryStr.match(/\$?([0-9,]+)/);
+    if (!match) return null;
+
+    // Take the first number found (for ranges, this will be the lower bound)
+    return parseInt(match[1].replace(/,/g, ''), 10);
+}
+
+// Render salary distribution histogram
+function renderSalaryHistogram() {
+    const binSize = parseInt(document.getElementById('salary-bin-size').value, 10);
+
+    // Extract salaries and filter out nulls
+    const salaries = allJobs
+        .map(job => extractSalaryValue(job.salary))
+        .filter(val => val !== null);
+
+    if (salaries.length === 0) {
+        console.log("No salary data available");
+        return;
+    }
+
+    // Find min and max salary
+    const minSalary = Math.min(...salaries);
+    const maxSalary = Math.max(...salaries);
+
+    // Create bins
+    const bins = {};
+    const start = Math.floor(minSalary / binSize) * binSize;
+    const end = Math.ceil(maxSalary / binSize) * binSize;
+
+    // Initialize bins
+    for (let i = start; i < end; i += binSize) {
+        const rangeLabel = `$${i.toLocaleString()} - $${(i + binSize).toLocaleString()}`;
+        bins[rangeLabel] = 0;
+    }
+
+    // Count salaries in each bin
+    salaries.forEach(salary => {
+        const binIndex = Math.floor(salary / binSize);
+        const rangeStart = binIndex * binSize;
+        const rangeLabel = `$${rangeStart.toLocaleString()} - $${(rangeStart + binSize).toLocaleString()}`;
+        bins[rangeLabel]++;
+    });
+
+    // Prepare data for chart
+    const labels = Object.keys(bins);
+    const data = Object.values(bins);
+
+    // Update chart
+    if (window.salaryHistogramChart) {
+        window.salaryHistogramChart.data.labels = labels;
+        window.salaryHistogramChart.data.datasets[0].data = data;
+        window.salaryHistogramChart.update();
+    }
+}
+
+
 // Add event listener for the "Update Histogram" button
 document.getElementById('update-histogram').addEventListener('click', renderHistogram);
+document.getElementById('update-salary-histogram').addEventListener('click', renderSalaryHistogram);
 
 // Add event listeners for checkboxes
 document.getElementById('filter-by-date').addEventListener('change', applyFilters);
@@ -324,6 +441,7 @@ document.getElementById('search-input').addEventListener('input', applyFilters);
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
     initializeBlankHistogram(); // Initialize a blank histogram
+    initializeSalaryHistogram();
     fetchJobs(); // Fetch jobs and render the histogram
     setupTabs(); // Set up tab navigation
 });

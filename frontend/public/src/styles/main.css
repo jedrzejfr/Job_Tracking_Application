@@ -209,3 +209,9 @@ section.active {
 .histogram-controls button:hover {
     background-color: #575757;
 }
+
+/* Add to your existing CSS */
+#salaryHistogramChart {
+    width: 100% !important;
+    height: 100% !important;
+}
